@@ -33,3 +33,27 @@ nvm ls
 cd 项目根目录下
 npm run build
 ```
+
+## 安装cnpm
+```
+nvm use 4.7.3
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+
+
+nvm use 6.9.5
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+```
+
+## 构建方式
+- 选择版本
+```
+nvm use 4.7.3 / 6.9.5
+```
+- cnpm安装
+```
+cnpm install
+```
+- 构建
+```
+npm run build
+```
