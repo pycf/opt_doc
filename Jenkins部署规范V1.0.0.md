@@ -11,7 +11,7 @@
 ## 2. java-docker部署方式
 >该方式适用于java SpringCloud方式构建的程序。
 #### 部署要求
-1. 使用192.168.0.156作为java-docker方式部署dev与pro环境服务器。
+1. 使用192.168.0.156&192.168.0.157作为java-docker方式部署dev与pro环境服务器。
 2. dev与pro环境相同模块使用不同的端口号进行区分。
 #### 部署模板
 ```
@@ -21,7 +21,7 @@ pipeline {
         label '192.168.0.156'
     }
     options {
-        timeout(time: 5, unit: 'MINUTES') 
+        timeout(time: 30, unit: 'MINUTES') 
     }
     parameters { 
         //构建选项，选择构建环境
@@ -150,7 +150,7 @@ pipeline {
     }
     options {
         //五分钟未响应结束
-        timeout(time: 5, unit: 'MINUTES') 
+        timeout(time: 30, unit: 'MINUTES') 
     }
     parameters { 
         //构建选项，选择构建环境
@@ -214,7 +214,7 @@ pipeline {
         label '192.168.0.153' //部署服务器
     }
     options {
-        timeout(time: 5, unit: 'MINUTES') 
+        timeout(time: 30, unit: 'MINUTES') 
     }
     parameters { 
         //构建选项，选择构建环境
@@ -278,4 +278,77 @@ pipeline {
 ```
 
 
-## 5.  python
+## 5.  python-docker部署方式
+>该方式适用于python-django框架构建的程序
+#### 部署要求
+1. 使用192.168.0.156&192.168.0.157作为python-docker方式部署dev与pro环境服务器。
+2. dev与pro环境相同模块使用不同的端口号进行区分。
+#### 部署模板pipeline
+```
+pipeline {
+    
+    agent {
+        label '192.168.0.157' // 指定构建节点
+    }
+    
+    options {
+        timeout(time: 30, unit: 'MINUTES')  // 构建任务超时时间
+    }
+    
+    parameters { 
+        //构建选项，选择构建环境，dev开发环境，pro正式环境
+        choice(name: 'release_env',
+                choices:'dev\npro', 
+                description: 'choose release environment')
+    }
+    
+    stages {
+        
+        stage('准备源码') {
+            steps {
+                script {
+                project_name="brokers_py"   // 项目名称
+                module_name="$JOB_NAME"     // 模块名称,调用jenkins系统变量
+                svn_addr="svn://192.168.0.151/pycf/Projects/PythonProjects/brokers_py"  // svn路径
+                send_mail_to = 'huruizhi@pystandard.com'
+                    if (release_env == 'dev'){
+                        network="brokers_py_dev" 
+                        port=3601
+                    } else {
+                        network="brokers_py_pro"
+                        port=3601
+                    }
+                }
+                checkout([$class: 'SubversionSCM', 
+                additionalCredentials: [], 
+                excludedCommitMessages: '', 
+                excludedRegions: '', 
+                excludedRevprop: '', 
+                excludedUsers: '', 
+                filterChangelog: false, 
+                ignoreDirPropChanges: false, 
+                includedRegions: '', 
+                locations: [[credentialsId: 'dffd18a8-473e-477e-a4dc-4d528fa3e55c', 
+                            depthOption: 'infinity', 
+                            ignoreExternalsOption: true, 
+                            local: '.', 
+                            remote: svn_addr ]], 
+                            quietOperation: true, 
+                            workspaceUpdater: [$class: 'UpdateUpdater']])
+            }
+        }
+        
+        stage('构建运行') {
+            steps {
+                // 调用构建脚本
+                sh "JENKINS_NODE_COOKIE=dontKillMe /bin/bash /application/jenskins/script/DeliverPython3_django-docker_brokers_py.sh ${network} ${module_name} ${project_name} ${port} ${env.BUILD_NUMBER} ${release_env}"
+            }
+        }
+        
+    }
+}
+```
+#### 构建脚本：DeliverPython3_django-docker_brokers_py.sh
+```
+待补充
+```
